@@ -25,6 +25,7 @@ Aplicación de consola para Inventario, Pedidos, Facturación y Pagos con arquit
 - Se incorporó **Observer** para alertar stock bajo (`StockNotificationCenter` + `ConsoleLowStockObserver`).
 - Se incorporó **Strategy para pagos** (`tarjeta/efectivo/transferencia`) y servicio de pagos.
 - Se mantuvieron validaciones de negocio (stock, cola, estados, facturación y pagos duplicados).
+- Se reforzó cancelación: solo pedidos en estado Pendiente pueden cancelarse.
 
 ## Ejecución
 

@@ -86,6 +86,9 @@ public sealed class Order
 
     public void Cancel()
     {
+        if (Status != OrderStatus.Pending)
+            throw new DomainException("Solo se puede cancelar un pedido en estado Pendiente.");
+
         _state = new CancelledOrderState(); // PATRÓN STATE
     }
 

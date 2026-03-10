@@ -11,6 +11,10 @@ public sealed class StockNotificationCenter
     public void Subscribe(IStockObserver observer)
     {
         ArgumentNullException.ThrowIfNull(observer);
+
+        if (_observers.Contains(observer))
+            return;
+
         _observers.Add(observer);
     }
 

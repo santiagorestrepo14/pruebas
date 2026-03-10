@@ -1,5 +1,6 @@
 using TechPartsHub.Application.Abstractions.Notifications;
 using TechPartsHub.Domain.Entities;
+using TechPartsHub.Domain.Exceptions;
 
 namespace TechPartsHub.ConsoleApp.Notifications;
 
@@ -10,6 +11,7 @@ public sealed class ConsoleLowStockObserver : IStockObserver
 
     public ConsoleLowStockObserver(int threshold)
     {
+        if (threshold < 0) throw new DomainException("El umbral de stock bajo no puede ser negativo.");
         _threshold = threshold;
     }
 

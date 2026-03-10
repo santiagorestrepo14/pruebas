@@ -56,3 +56,5 @@
 - DIP: servicios dependen de repositorios/abstracciones.
 - ISP: interfaces específicas por función.
 - LSP: repositorios in-memory sustituyen contratos sin romper comportamiento.
+
+- Regla adicional validada: Cancelación válida solo en estado pendiente.
