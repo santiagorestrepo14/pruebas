@@ -9,8 +9,7 @@ public sealed class ViewLowStockCommand : IMenuCommand
 
     public async Task ExecuteAsync(ApplicationContext context)
     {
-        Console.Write("K: ");
-        var k = int.Parse(Console.ReadLine() ?? "0");
+        var k = InputReader.ReadInt("K: ", 1);
         var result = await context.InventoryService.GetLowestStockAsync(k);
 
         Console.WriteLine("\n=== Menor stock ===");

@@ -9,12 +9,9 @@ public sealed class AddOrderItemCommand : IMenuCommand
 
     public async Task ExecuteAsync(ApplicationContext context)
     {
-        Console.Write("Id Pedido: ");
-        var orderId = Guid.Parse(Console.ReadLine() ?? string.Empty);
-        Console.Write("Id Repuesto: ");
-        var partId = Guid.Parse(Console.ReadLine() ?? string.Empty);
-        Console.Write("Cantidad: ");
-        var quantity = int.Parse(Console.ReadLine() ?? "0");
+        var orderId = InputReader.ReadGuid("Id Pedido: ");
+        var partId = InputReader.ReadGuid("Id Repuesto: ");
+        var quantity = InputReader.ReadInt("Cantidad: ", 1);
 
         await context.OrderService.AddItemAsync(orderId, partId, quantity);
         Console.WriteLine("Ítem agregado correctamente.");

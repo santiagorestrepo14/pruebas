@@ -1,5 +1,6 @@
 using TechPartsHub.Application.Abstractions.Processing;
 using TechPartsHub.Application.Abstractions.Repositories;
+using TechPartsHub.Application.Notifications;
 using TechPartsHub.Application.Processing;
 using TechPartsHub.Domain.Exceptions;
 
@@ -10,12 +11,18 @@ public sealed class OrderProcessingService
     private readonly IOrderRepository _orderRepository;
     private readonly ISparePartRepository _sparePartRepository;
     private readonly IOrderQueueRepository _orderQueueRepository;
+    private readonly StockNotificationCenter _stockNotificationCenter;
 
-    public OrderProcessingService(IOrderRepository orderRepository, ISparePartRepository sparePartRepository, IOrderQueueRepository orderQueueRepository)
+    public OrderProcessingService(
+        IOrderRepository orderRepository,
+        ISparePartRepository sparePartRepository,
+        IOrderQueueRepository orderQueueRepository,
+        StockNotificationCenter stockNotificationCenter)
     {
         _orderRepository = orderRepository;
         _sparePartRepository = sparePartRepository;
         _orderQueueRepository = orderQueueRepository;
+        _stockNotificationCenter = stockNotificationCenter;
     }
 
     public async Task<Guid> ProcessNextAsync(CancellationToken cancellationToken = default)
@@ -44,9 +51,16 @@ public sealed class OrderProcessingService
             foreach (var part in partById.Values)
             {
                 await _sparePartRepository.UpdateAsync(part, cancellationToken);
+                await _stockNotificationCenter.NotifyLowStockAsync(part, cancellationToken); // PATRÓN OBSERVER
             }
 
             return order.Id;
+        }
+        catch (DomainException)
+        {
+            if (!await _orderQueueRepository.ContainsAsync(orderId.Value, CancellationToken.None))
+                await _orderQueueRepository.EnqueueAsync(orderId.Value, CancellationToken.None);
+            throw;
         }
         catch
         {

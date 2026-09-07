@@ -21,4 +21,10 @@ public sealed class InMemoryInvoiceRepository : IInvoiceRepository
         var invoice = _storage.Values.FirstOrDefault(x => x.OrderId == orderId);
         return Task.FromResult(invoice);
     }
+
+    public Task<Invoice?> GetByIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+    {
+        _storage.TryGetValue(invoiceId, out var invoice);
+        return Task.FromResult(invoice);
+    }
 }

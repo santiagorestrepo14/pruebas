@@ -1,5 +1,6 @@
 using TechPartsHub.Domain.Enums;
 using TechPartsHub.Domain.Exceptions;
+using TechPartsHub.Domain.Memento;
 using TechPartsHub.Domain.State;
 
 namespace TechPartsHub.Domain.Entities;
@@ -25,7 +26,7 @@ public sealed class Order
     public void AddItem(OrderItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        _state.EnsureCanQueue(); // Pendiente
+        _state.EnsureCanQueue();
 
         var existing = _items.FirstOrDefault(x => x.SparePartId == item.SparePartId);
         if (existing is null)
@@ -46,6 +47,27 @@ public sealed class Order
         _items.Remove(item);
     }
 
+    // PATRÓN MEMENTO: crea snapshot del estado de ítems antes de cambios.
+    public OrderItemsMemento CreateItemsMemento()
+    {
+        var snapshot = _items
+            .Select(x => new OrderItemSnapshot(x.SparePartId, x.SparePartName, x.UnitPrice, x.Quantity))
+            .ToArray();
+
+        return new OrderItemsMemento(snapshot);
+    }
+
+    // PATRÓN MEMENTO: restaura el estado de ítems desde snapshot.
+    public void RestoreItemsMemento(OrderItemsMemento memento)
+    {
+        ArgumentNullException.ThrowIfNull(memento);
+        _state.EnsureCanQueue();
+
+        _items.Clear();
+        foreach (var snapshot in memento.Items)
+            _items.Add(new OrderItem(snapshot.SparePartId, snapshot.SparePartName, snapshot.UnitPrice, snapshot.Quantity));
+    }
+
     public void EnsureCanQueue()
     {
         _state.EnsureCanQueue();
@@ -64,13 +86,12 @@ public sealed class Order
 
     public void Cancel()
     {
+        if (Status != OrderStatus.Pending)
+            throw new DomainException("Solo se puede cancelar un pedido en estado Pendiente.");
+
         _state = new CancelledOrderState(); // PATRÓN STATE
     }
 
     public int GetReservedQuantity(Guid sparePartId)
-    {
-        return _items.Where(x => x.SparePartId == sparePartId).Sum(x => x.Quantity);
-    }
-
-    public decimal GetSubtotal() => _items.Sum(x => x.GetLineTotal());
+        => _items.Where(x => x.SparePartId == sparePartId).Sum(x => x.Quantity);
 }

@@ -1,3 +1,4 @@
+using TechPartsHub.Domain.Exceptions;
 using TechPartsHub.Domain.Strategy;
 
 namespace TechPartsHub.Application.Factories;
@@ -12,7 +13,7 @@ public static class SortStrategyFactory
             "nombre" => new SortByNameStrategy(),
             "precio" => new SortByPriceStrategy(),
             "stock" => new SortByStockStrategy(),
-            _ => throw new ArgumentException("Criterio de orden no soportado. Use: nombre, precio o stock.")
+            _ => throw new DomainException("Criterio de orden no soportado. Use: nombre, precio o stock.")
         };
     }
 }

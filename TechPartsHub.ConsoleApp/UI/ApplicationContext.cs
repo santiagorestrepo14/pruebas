@@ -8,4 +8,6 @@ public sealed class ApplicationContext
     public required OrderService OrderService { get; init; }
     public required OrderProcessingService OrderProcessingService { get; init; }
     public required BillingService BillingService { get; init; }
+    public required OrderPricingService OrderPricingService { get; init; }
+    public required PaymentService PaymentService { get; init; }
 }

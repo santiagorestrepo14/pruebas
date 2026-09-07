@@ -4,7 +4,7 @@ namespace TechPartsHub.ConsoleApp.Commands;
 
 public sealed class ViewOrdersCommand : IMenuCommand
 {
-    public string Key => "11";
+    public string Key => "12";
     public string Description => "Ver pedidos";
 
     public async Task ExecuteAsync(ApplicationContext context)
@@ -13,11 +13,13 @@ public sealed class ViewOrdersCommand : IMenuCommand
         Console.WriteLine("\n=== Pedidos ===");
         foreach (var order in orders)
         {
-            Console.WriteLine($"Pedido {order.Id} | Estado:{order.Status} | Ítems:{order.Items.Count} | Total:{order.GetSubtotal()}");
+            var totalText = order.Items.Any()
+                ? context.OrderPricingService.CalculateSubtotal(order).ToString("0.00")
+                : "N/A";
+
+            Console.WriteLine($"Pedido {order.Id} | Estado:{order.Status} | Ítems:{order.Items.Count} | Total:{totalText}");
             foreach (var item in order.Items)
-            {
                 Console.WriteLine($"  - {item.SparePartName} x{item.Quantity} (${item.UnitPrice})");
-            }
         }
     }
 }

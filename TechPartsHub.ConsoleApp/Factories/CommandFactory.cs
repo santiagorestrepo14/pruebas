@@ -17,11 +17,15 @@ public static class CommandFactory
             new CreateOrderCommand(),
             new AddOrderItemCommand(),
             new RemoveOrderItemCommand(),
+            new UndoOrderItemsChangeCommand(),
             new EnqueueOrderCommand(),
             new ProcessNextOrderCommand(),
             new ViewOrdersCommand(),
+            new CancelOrderCommand(),
             new GenerateInvoiceCommand(),
             new ViewInvoicesCommand(),
+            new PayInvoiceCommand(),
+            new ViewPaymentsCommand(),
             new ExitCommand()
         ];
 

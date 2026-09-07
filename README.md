@@ -1,59 +1,46 @@
 # TechPartsHub (.NET 8)
 
-Solución completa de consola para gestión de inventario, pedidos y facturación.
+Aplicación de consola para Inventario, Pedidos, Facturación y Pagos con arquitectura limpia:
 
-## Arquitectura
+- `TechPartsHub.Domain`
+- `TechPartsHub.Application`
+- `TechPartsHub.Infrastructure`
+- `TechPartsHub.ConsoleApp`
 
-La solución está separada en cuatro proyectos:
+## Patrones aplicados (con comentario en código)
 
-- **TechPartsHub.Domain**: entidades, estados de pedido, reglas de negocio base, especificaciones y estrategias.
-- **TechPartsHub.Application**: casos de uso/servicios de negocio, interfaces de repositorio, fábricas y pipeline de procesamiento.
-- **TechPartsHub.Infrastructure**: repositorios en memoria y datos semilla.
-- **TechPartsHub.ConsoleApp**: interfaz de consola, menú y comandos.
+- **PATRÓN STATE**: estados del pedido (`Pending`, `Processed`, `Cancelled`).
+- **PATRÓN STRATEGY**: ordenamiento de inventario y métodos de pago.
+- **PATRÓN SPECIFICATION**: filtros de búsqueda (incluye compuesto).
+- **PATRÓN REPOSITORY**: contratos en Application e implementaciones en Infrastructure.
+- **PATRÓN COMMAND**: menú de consola por comando.
+- **PATRÓN SIMPLE FACTORY**: creación de comandos, strategies y specifications.
+- **PATRÓN CHAIN OF RESPONSIBILITY**: pipeline de procesamiento de pedidos.
+- **PATRÓN MEMENTO**: deshacer cambios de ítems del pedido.
+- **PATRÓN OBSERVER**: notificación de stock bajo al procesar pedidos.
 
-Esta separación aplica DIP y SRP: la app depende de abstracciones (interfaces) y cada capa tiene una responsabilidad clara.
+## Cambios relevantes de esta iteración
 
-## Patrones implementados
+- Se incorporó **Memento** para `AddItem/RemoveItem` con deshacer (`UndoLastItemsChangeAsync`).
+- Se incorporó **Observer** para alertar stock bajo (`StockNotificationCenter` + `ConsoleLowStockObserver`).
+- Se incorporó **Strategy para pagos** (`tarjeta/efectivo/transferencia`) y servicio de pagos.
+- Se mantuvieron validaciones de negocio (stock, cola, estados, facturación y pagos duplicados).
+- Se reforzó cancelación: solo pedidos en estado Pendiente pueden cancelarse.
 
-- **PATRÓN STATE**: `Domain/State/*` y uso en `Domain/Entities/Order.cs`.
-- **PATRÓN STRATEGY**: `Domain/Strategy/*`, usado desde `Application/Services/InventoryService.cs`.
-- **PATRÓN SPECIFICATION**: `Domain/Specifications/*`, usado desde `Application/Services/InventoryService.cs`.
-- **PATRÓN REPOSITORY**: interfaces en `Application/Abstractions/Repositories/*` e implementaciones en `Infrastructure/Repositories/*`.
-- **PATRÓN COMMAND**: `ConsoleApp/Commands/*`.
-- **PATRÓN SIMPLE FACTORY**: `Application/Factories/*` y `ConsoleApp/Factories/CommandFactory.cs`.
-- **PATRÓN CHAIN OF RESPONSIBILITY**: `Application/Processing/*`, ejecutado en `Application/Services/OrderProcessingService.cs`.
+## Ejecución
 
-## Cómo ejecutar
+```bash
+dotnet restore TechPartsHub.sln
+dotnet build TechPartsHub.sln
+dotnet run --project TechPartsHub.ConsoleApp/TechPartsHub.ConsoleApp.csproj
+```
 
-1. Tener instalado **.NET SDK 8.0**.
-2. Restaurar y compilar:
-   ```bash
-   dotnet restore TechPartsHub.sln
-   dotnet build TechPartsHub.sln
-   ```
-3. Ejecutar consola:
-   ```bash
-   dotnet run --project TechPartsHub.ConsoleApp/TechPartsHub.ConsoleApp.csproj
-   ```
+## Flujo rápido recomendado
 
-## Flujo de prueba recomendado
-
-1. Ver inventario (opción 1) y copiar un `Id` de repuesto.
-2. Crear pedido (opción 6) y copiar `Id` pedido.
-3. Agregar ítem (opción 7) usando ambos IDs.
-4. Ver pedidos (opción 11).
-5. Enviar pedido a cola (opción 9).
-6. Procesar pedido (opción 10): aquí se descuenta stock.
-7. Ver inventario nuevamente (opción 1) para validar descuento.
-8. Generar factura (opción 12).
-9. Ver facturas (opción 13).
-
-## Reglas de negocio cubiertas
-
-- No permite stock negativo al registrar.
-- Al agregar ítems valida stock considerando cantidades ya reservadas en el mismo pedido.
-- El stock se descuenta solo al procesar.
-- No permite enviar a cola pedidos vacíos ni en estado inválido.
-- No permite pedidos duplicados en cola.
-- No permite procesar pedidos inexistentes.
-- No permite facturar pedidos no procesados.
+1. Crear pedido.
+2. Agregar ítems.
+3. Probar deshacer ítems.
+4. Enviar a cola y procesar (se descuenta stock y puede disparar alerta observer).
+5. Generar factura.
+6. Pagar factura con método (`tarjeta`, `efectivo` o `transferencia`).
+7. Ver facturas y pagos.

@@ -1,6 +1,7 @@
 using TechPartsHub.Application.Abstractions.Repositories;
 using TechPartsHub.Domain.Entities;
 using TechPartsHub.Domain.Exceptions;
+using TechPartsHub.Domain.Memento;
 
 namespace TechPartsHub.Application.Services;
 
@@ -9,6 +10,7 @@ public sealed class OrderService
     private readonly IOrderRepository _orderRepository;
     private readonly ISparePartRepository _sparePartRepository;
     private readonly IOrderQueueRepository _orderQueueRepository;
+    private readonly Dictionary<Guid, Stack<OrderItemsMemento>> _itemsHistoryByOrder = new();
 
     public OrderService(IOrderRepository orderRepository, ISparePartRepository sparePartRepository, IOrderQueueRepository orderQueueRepository)
     {
@@ -21,6 +23,7 @@ public sealed class OrderService
     {
         var order = new Order(Guid.NewGuid());
         await _orderRepository.AddAsync(order, cancellationToken);
+        _itemsHistoryByOrder[order.Id] = new Stack<OrderItemsMemento>();
         return order;
     }
 
@@ -41,6 +44,8 @@ public sealed class OrderService
         if (alreadyRequested + quantity > part.Stock)
             throw new DomainException($"No se puede agregar cantidad mayor al stock disponible considerando el pedido. Disponible: {part.Stock}, en pedido: {alreadyRequested}, a agregar: {quantity}.");
 
+        SaveItemsMemento(order);
+
         order.AddItem(new OrderItem(part.Id, part.Name, part.UnitPrice, quantity));
         await _orderRepository.UpdateAsync(order, cancellationToken);
     }
@@ -50,7 +55,23 @@ public sealed class OrderService
         var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken)
             ?? throw new DomainException("Pedido inexistente.");
 
+        SaveItemsMemento(order);
+
         order.RemoveItem(sparePartId);
+        await _orderRepository.UpdateAsync(order, cancellationToken);
+    }
+
+    public async Task UndoLastItemsChangeAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken)
+            ?? throw new DomainException("Pedido inexistente.");
+
+        if (!_itemsHistoryByOrder.TryGetValue(orderId, out var history) || history.Count == 0)
+            throw new DomainException("No hay cambios de ítems para deshacer en este pedido.");
+
+        var memento = history.Pop();
+        order.RestoreItemsMemento(memento); // PATRÓN MEMENTO
+
         await _orderRepository.UpdateAsync(order, cancellationToken);
     }
 
@@ -65,5 +86,28 @@ public sealed class OrderService
             throw new DomainException("No debe permitirse duplicar un pedido dentro de la cola.");
 
         await _orderQueueRepository.EnqueueAsync(orderId, cancellationToken);
+    }
+
+    public async Task CancelOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken)
+            ?? throw new DomainException("Pedido inexistente.");
+
+        if (await _orderQueueRepository.ContainsAsync(orderId, cancellationToken))
+            throw new DomainException("No se puede cancelar un pedido que está en cola de procesamiento.");
+
+        order.Cancel();
+        await _orderRepository.UpdateAsync(order, cancellationToken);
+    }
+
+    private void SaveItemsMemento(Order order)
+    {
+        if (!_itemsHistoryByOrder.TryGetValue(order.Id, out var history))
+        {
+            history = new Stack<OrderItemsMemento>();
+            _itemsHistoryByOrder[order.Id] = history;
+        }
+
+        history.Push(order.CreateItemsMemento()); // PATRÓN MEMENTO
     }
 }

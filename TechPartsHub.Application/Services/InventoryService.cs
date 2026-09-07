@@ -1,6 +1,7 @@
 using TechPartsHub.Application.Abstractions.Repositories;
 using TechPartsHub.Application.Factories;
 using TechPartsHub.Domain.Entities;
+using TechPartsHub.Domain.Exceptions;
 using TechPartsHub.Domain.Specifications;
 
 namespace TechPartsHub.Application.Services;
@@ -18,7 +19,7 @@ public sealed class InventoryService
     {
         var existingBySku = await _sparePartRepository.GetBySkuAsync(sku, cancellationToken);
         if (existingBySku is not null)
-            throw new InvalidOperationException($"Ya existe un repuesto con SKU '{sku}'.");
+            throw new DomainException($"Ya existe un repuesto con SKU '{sku}'.");
 
         var part = new SparePart(Guid.NewGuid(), sku, name, category, unitPrice, stock);
         await _sparePartRepository.AddAsync(part, cancellationToken);
@@ -44,7 +45,7 @@ public sealed class InventoryService
 
     public async Task<IReadOnlyCollection<SparePart>> GetLowestStockAsync(int k, CancellationToken cancellationToken = default)
     {
-        if (k <= 0) throw new ArgumentException("K debe ser mayor a cero.");
+        if (k <= 0) throw new DomainException("K debe ser mayor a cero.");
 
         var parts = await _sparePartRepository.GetAllAsync(cancellationToken);
         return parts.OrderBy(x => x.Stock).Take(k).ToArray();

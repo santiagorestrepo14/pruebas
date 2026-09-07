@@ -1,172 +1,60 @@
 # REVIEW_CHECKLIST
 
-## Dominio (`TechPartsHub.Domain`)
+## Correcciones implementadas en esta revisión
 
-- `Exceptions/DomainException.cs`
-  - Responsabilidad: excepción de dominio con mensajes claros.
-  - SOLID: SRP.
-  - Patrón: N/A.
+- [x] **MEMENTO** en pedidos para agregar/remover ítems con deshacer.
+- [x] **OBSERVER** para notificación de stock bajo.
+- [x] **STRATEGY de pagos** con métodos conmutables.
+- [x] Se conserva **COMMAND + SIMPLE FACTORY + CHAIN OF RESPONSIBILITY**.
+- [x] Se mantienen reglas de negocio de stock/cola/facturación.
 
-- `Enums/OrderStatus.cs`
-  - Responsabilidad: estados válidos del pedido.
-  - SOLID: SRP.
-  - Patrón: soporte para STATE.
+## Archivos clave y responsabilidad
 
-- `State/IOrderState.cs`, `State/PendingOrderState.cs`, `State/ProcessedOrderState.cs`, `State/CancelledOrderState.cs`
-  - Responsabilidad: reglas por estado de pedido (cola/proceso/facturación).
-  - SOLID: OCP/LSP (nuevos estados sin romper consumidores).
-  - Patrón: **STATE**.
+- `Domain/Entities/Order.cs`
+  - Agregado de pedido y estado.
+  - **STATE** + **MEMENTO** (`CreateItemsMemento`, `RestoreItemsMemento`).
 
-- `Entities/SparePart.cs`
-  - Responsabilidad: entidad de inventario y validación de stock.
-  - SOLID: SRP.
-  - Patrón: N/A.
+- `Domain/Memento/OrderItemsMemento.cs`
+  - Snapshot de ítems.
+  - **MEMENTO**.
 
-- `Entities/OrderItem.cs`
-  - Responsabilidad: detalle de pedido.
-  - SOLID: SRP.
-  - Patrón: N/A.
+- `Application/Services/OrderService.cs`
+  - Casos de uso de pedidos.
+  - Gestiona historial de mementos y deshacer.
 
-- `Entities/Order.cs`
-  - Responsabilidad: agregado de pedido (ítems + estado), sin lógica de facturación.
-  - SOLID: SRP, encapsulación.
-  - Patrón: **STATE** (uso concreto).
+- `Application/Notifications/StockNotificationCenter.cs`
+  - Subject de notificaciones de stock.
+  - **OBSERVER**.
 
-- `Entities/Invoice.cs`
-  - Responsabilidad: entidad de facturación separada de pedido.
-  - SOLID: SRP.
-  - Patrón: N/A.
+- `ConsoleApp/Notifications/ConsoleLowStockObserver.cs`
+  - Observer concreto de alertas en consola.
+  - **OBSERVER**.
 
-- `Specifications/*`
-  - Responsabilidad: criterios de búsqueda composables.
-  - SOLID: OCP (nuevos filtros por extensión).
-  - Patrón: **SPECIFICATION**.
+- `Application/Services/Payments/*`
+  - Estrategias de pago y resultado.
+  - **STRATEGY**.
 
-- `Strategy/*`
-  - Responsabilidad: ordenamiento por criterio.
-  - SOLID: OCP/ISP.
-  - Patrón: **STRATEGY**.
+- `Application/Factories/PaymentStrategyFactory.cs`
+  - Crea estrategia de pago según método.
+  - **SIMPLE FACTORY**.
 
-## Aplicación (`TechPartsHub.Application`)
+- `Application/Services/PaymentService.cs`
+  - Orquesta pago de factura y evita duplicados.
 
-- `Abstractions/Repositories/*`
-  - Responsabilidad: contratos de persistencia.
-  - SOLID: DIP/ISP.
-  - Patrón: **REPOSITORY**.
+- `Application/Services/OrderProcessingService.cs`
+  - Procesa pedidos por pipeline.
+  - **CHAIN OF RESPONSIBILITY** + disparo de observer de stock.
 
-- `Abstractions/Processing/IOrderProcessingHandler.cs`
-  - Responsabilidad: contrato del pipeline.
-  - SOLID: ISP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
+- `ConsoleApp/Commands/*`
+  - Menú desacoplado por acción.
+  - **COMMAND**.
 
-- `Processing/OrderProcessingContext.cs`
-  - Responsabilidad: contexto compartido para procesamiento.
-  - SOLID: SRP.
-  - Patrón: soporte Chain.
+## Observaciones SOLID
 
-- `Processing/OrderProcessingHandlerBase.cs`
-  - Responsabilidad: encadenamiento de handlers.
-  - SOLID: OCP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
+- SRP: responsabilidades separadas en servicios dedicados (Order, Billing, Payment, Notification).
+- OCP: nuevos métodos de pago/observadores/filters sin modificar consumidores.
+- DIP: servicios dependen de repositorios/abstracciones.
+- ISP: interfaces específicas por función.
+- LSP: repositorios in-memory sustituyen contratos sin romper comportamiento.
 
-- `Processing/ValidateOrderStateHandler.cs`
-  - Responsabilidad: validar estado procesable.
-  - SOLID: SRP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
-
-- `Processing/ValidateOrderItemsHandler.cs`
-  - Responsabilidad: validar que haya ítems.
-  - SOLID: SRP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
-
-- `Processing/ValidateStockHandler.cs`
-  - Responsabilidad: validar stock antes de descontar.
-  - SOLID: SRP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
-
-- `Processing/DeductStockHandler.cs`
-  - Responsabilidad: descontar stock al procesar.
-  - SOLID: SRP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
-
-- `Processing/MarkOrderProcessedHandler.cs`
-  - Responsabilidad: cerrar flujo marcando procesado.
-  - SOLID: SRP.
-  - Patrón: **CHAIN OF RESPONSIBILITY**.
-
-- `Factories/SortStrategyFactory.cs`
-  - Responsabilidad: crear estrategia de orden.
-  - SOLID: SRP/OCP.
-  - Patrón: **SIMPLE FACTORY**.
-
-- `Factories/SparePartSpecificationFactory.cs`
-  - Responsabilidad: crear especificación de búsqueda.
-  - SOLID: SRP/OCP.
-  - Patrón: **SIMPLE FACTORY**.
-
-- `Services/InventoryService.cs`
-  - Responsabilidad: casos de uso de inventario.
-  - SOLID: SRP/DIP.
-  - Patrón: usa **STRATEGY**, **SPECIFICATION**, **REPOSITORY**.
-
-- `Services/OrderService.cs`
-  - Responsabilidad: creación/edición/cola de pedidos y validaciones de stock en agregado.
-  - SOLID: SRP/DIP.
-  - Patrón: usa **REPOSITORY**.
-
-- `Services/OrderProcessingService.cs`
-  - Responsabilidad: procesar cola y orquestar pipeline seguro.
-  - SOLID: SRP/DIP.
-  - Patrón: usa **CHAIN OF RESPONSIBILITY**.
-
-- `Services/BillingService.cs`
-  - Responsabilidad: facturar pedidos procesados.
-  - SOLID: SRP/DIP.
-  - Patrón: usa **REPOSITORY**.
-
-## Infraestructura (`TechPartsHub.Infrastructure`)
-
-- `Repositories/InMemorySparePartRepository.cs`
-- `Repositories/InMemoryOrderRepository.cs`
-- `Repositories/InMemoryInvoiceRepository.cs`
-- `Repositories/InMemoryOrderQueueRepository.cs`
-  - Responsabilidad: persistencia en memoria de contratos de Application.
-  - SOLID: LSP (sustituyen contratos), DIP.
-  - Patrón: **REPOSITORY**.
-
-- `Seed/SeedData.cs`
-  - Responsabilidad: carga inicial de repuestos para pruebas inmediatas.
-  - SOLID: SRP.
-  - Patrón: N/A.
-
-## Consola (`TechPartsHub.ConsoleApp`)
-
-- `UI/ApplicationContext.cs`
-  - Responsabilidad: composición de dependencias para comandos.
-  - SOLID: SRP.
-
-- `Commands/IMenuCommand.cs`
-  - Responsabilidad: contrato de comando.
-  - SOLID: ISP.
-  - Patrón: **COMMAND**.
-
-- `Commands/*.cs` (ViewInventory, RegisterSparePart, SearchSpareParts, SortSpareParts, ViewLowStock, CreateOrder, AddOrderItem, RemoveOrderItem, EnqueueOrder, ProcessNextOrder, ViewOrders, GenerateInvoice, ViewInvoices, Exit)
-  - Responsabilidad: una acción de menú por clase.
-  - SOLID: SRP/OCP.
-  - Patrón: **COMMAND**.
-
-- `Factories/CommandFactory.cs`
-  - Responsabilidad: registro centralizado de comandos.
-  - SOLID: SRP.
-  - Patrón: **SIMPLE FACTORY**.
-
-- `Program.cs`
-  - Responsabilidad: bootstrap y loop de UI con manejo de errores.
-  - SOLID: composición raíz.
-  - Patrón: consumidor de COMMAND.
-
-## Observaciones finales
-
-- Separación clara Inventario/Pedidos/Facturación.
-- Pedido no contiene lógica financiera de facturación.
-- Reglas críticas de negocio implementadas con validaciones explícitas y excepciones descriptivas.
+- Regla adicional validada: Cancelación válida solo en estado pendiente.

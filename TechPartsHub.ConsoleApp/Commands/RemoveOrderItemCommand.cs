@@ -9,10 +9,8 @@ public sealed class RemoveOrderItemCommand : IMenuCommand
 
     public async Task ExecuteAsync(ApplicationContext context)
     {
-        Console.Write("Id Pedido: ");
-        var orderId = Guid.Parse(Console.ReadLine() ?? string.Empty);
-        Console.Write("Id Repuesto: ");
-        var partId = Guid.Parse(Console.ReadLine() ?? string.Empty);
+        var orderId = InputReader.ReadGuid("Id Pedido: ");
+        var partId = InputReader.ReadGuid("Id Repuesto: ");
 
         await context.OrderService.RemoveItemAsync(orderId, partId);
         Console.WriteLine("Ítem removido correctamente.");
