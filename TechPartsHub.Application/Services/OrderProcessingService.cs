@@ -58,6 +58,8 @@ public sealed class OrderProcessingService
         }
         catch (DomainException)
         {
+            if (!await _orderQueueRepository.ContainsAsync(orderId.Value, CancellationToken.None))
+                await _orderQueueRepository.EnqueueAsync(orderId.Value, CancellationToken.None);
             throw;
         }
         catch

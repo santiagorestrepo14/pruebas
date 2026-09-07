@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechPartsHub.Infrastructure
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechPartsHub.ConsoleApp", "TechPartsHub.ConsoleApp\TechPartsHub.ConsoleApp.csproj", "{D347F226-1122-4A5F-B8D3-61E136D2567D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechPartsHub.Tests", "TechPartsHub.Tests\TechPartsHub.Tests.csproj", "{6425FE13-ADAE-4B1A-9838-8B1EFD42B697}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{D347F226-1122-4A5F-B8D3-61E136D2567D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D347F226-1122-4A5F-B8D3-61E136D2567D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D347F226-1122-4A5F-B8D3-61E136D2567D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6425FE13-ADAE-4B1A-9838-8B1EFD42B697}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6425FE13-ADAE-4B1A-9838-8B1EFD42B697}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6425FE13-ADAE-4B1A-9838-8B1EFD42B697}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6425FE13-ADAE-4B1A-9838-8B1EFD42B697}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
